@@ -1,13 +1,10 @@
 
+import Navbar from './components/shared/Navbar.jsx'
 
-import './App.css'
-
-function App() {
+export default function App() {
   return (
     <>
-       <h1 className="text-red-500">Job Portal</h1>
+      <Navbar />
     </>
-  )
+  );
 }
-
-export default App
