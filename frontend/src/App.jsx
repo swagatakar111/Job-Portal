@@ -5,6 +5,8 @@ import Signup from './components/auth/Signup.jsx'
 import Home from './components/Home.jsx';
 import { Toaster } from "sonner";
 import Jobs from "./components/Jobs.jsx";
+import Browse from "./components/Browse.jsx";
+import Profile from "./components/Profile.jsx";
 
 
 const appRouter = createBrowserRouter([
@@ -23,6 +25,14 @@ const appRouter = createBrowserRouter([
   {
     path:'/jobs',
     element:<Jobs/>
+  },
+  {
+    path:'/browse',
+    element:<Browse/>
+  },
+  {
+    path:'/profile',
+    element:<Profile/>
   }
 ])
 
