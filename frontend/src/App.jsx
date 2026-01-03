@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 import Jobs from "./components/Jobs.jsx";
 import Browse from "./components/Browse.jsx";
 import Profile from "./components/Profile.jsx";
+import JobDescription from "./components/JobDescription.jsx";
 
 
 const appRouter = createBrowserRouter([
@@ -25,6 +26,10 @@ const appRouter = createBrowserRouter([
   {
     path:'/jobs',
     element:<Jobs/>
+  },
+  {
+    path:'/description/:id',
+    element:<JobDescription/>
   },
   {
     path:'/browse',
