@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { APPLICATION_API_END_POINT, JOB_API_END_POINT } from '@/utils/constant';
 import { setSingleJob } from '@/redux/jobSlice';
@@ -12,36 +12,39 @@ const JobDescription = () => {
     const { singleJob } = useSelector(store => store.job);
     const { user } = useSelector(store => store.auth);
     
-    // Local state to manage the button text/style immediately
-    const [isApplied, setIsApplied] = useState(false);
+    // Initial state setup with safety checks for guest users
+    const isIntiallyApplied = singleJob?.applications?.some(application => application.applicant === user?._id) || false;
+    const [isApplied, setIsApplied] = useState(isIntiallyApplied);
 
     const params = useParams();
     const jobId = params.id;
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const applyJobHandler = async () => {
+        // 1. Check if user is logged in
+        if (!user) {
+            toast.error("Please login to apply for this job.");
+            // Optional: navigate('/login'); 
+            return;
+        }
+
         try {
-            const res = await axios.get(`${APPLICATION_API_END_POINT}/apply/${jobId}`, { 
-                headers: { Authorization: `Bearer ${user?.token}` },
-                withCredentials: true 
-            });
+            const res = await axios.get(`${APPLICATION_API_END_POINT}/apply/${jobId}`, { withCredentials: true });
 
             if (res.data.success) {
-                setIsApplied(true); // Update local state immediately
-                
-                // Update Redux state to keep global data in sync
-                const updatedSingleJob = {
+                setIsApplied(true); // Update local state
+                // Update Redux state to keep UI in sync
+                const updatedSingleJob = { 
                     ...singleJob, 
-                    applications: [...singleJob.applications, { applicant: user?._id }]
-                };
+                    applications: [...singleJob.applications, { applicant: user?._id }] 
+                }
                 dispatch(setSingleJob(updatedSingleJob)); 
-                
                 toast.success(res.data.message);
             }
         } catch (error) {
             console.log(error);
-            // This captures the 400 error message from your backend
-            toast.error(error.response?.data?.message || "Something went wrong");
+            toast.error(error.response?.data?.message || "An error occurred");
         }
     }
 
@@ -51,11 +54,8 @@ const JobDescription = () => {
                 const res = await axios.get(`${JOB_API_END_POINT}/get/${jobId}`, { withCredentials: true });
                 if (res.data.success) {
                     dispatch(setSingleJob(res.data.job));
-                    
-                    // Sync the "isApplied" state with the fetched job data
-                    // We check if the current user's ID exists in the applications array
-                    const hasApplied = res.data.job.applications.some(application => application.applicant === user?._id);
-                    setIsApplied(hasApplied);
+                    // Sync application status based on fetched data
+                    setIsApplied(res.data.job.applications.some(application => application.applicant === user?._id));
                 }
             } catch (error) {
                 console.log(error);
@@ -65,25 +65,22 @@ const JobDescription = () => {
     }, [jobId, dispatch, user?._id]);
 
     return (
-        <div className='max-w-7xl mx-auto my-10 px-4'>
+        <div className='max-w-7xl mx-auto my-10'>
             <div className='flex items-center justify-between'>
                 <div>
                     <h1 className='font-bold text-xl'>{singleJob?.title}</h1>
                     <div className='flex items-center gap-2 mt-4'>
-                        <Badge className={'text-blue-700 font-bold'} variant="ghost">{singleJob?.position} Positions</Badge>
+                        <Badge className={'text-blue-700 font-bold'} variant="ghost">{singleJob?.postion} Positions</Badge>
                         <Badge className={'text-[#F83002] font-bold'} variant="ghost">{singleJob?.jobType}</Badge>
                         <Badge className={'text-[#7209b7] font-bold'} variant="ghost">{singleJob?.salary} LPA</Badge>
                     </div>
                 </div>
                 <Button
                     onClick={isApplied ? null : applyJobHandler}
+                    // Button is only disabled if the user HAS applied. 
+                    // It stays enabled for guest users so they can click and see the toast.
                     disabled={isApplied}
-                    className={`rounded-lg transition-all duration-300 ${
-                        isApplied 
-                        ? 'bg-gray-600 cursor-not-allowed' 
-                        : 'bg-[#7209b7] hover:bg-[#5f32ad] cursor-pointer'
-                    }`}
-                >
+                    className={`rounded-lg ${isApplied ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#7209b7] hover:bg-[#5f32ad]'}`}>
                     {isApplied ? 'Already Applied' : 'Apply Now'}
                 </Button>
             </div>
@@ -94,7 +91,7 @@ const JobDescription = () => {
                 <h1 className='font-bold my-1'>Role: <span className='pl-4 font-normal text-gray-800'>{singleJob?.title}</span></h1>
                 <h1 className='font-bold my-1'>Location: <span className='pl-4 font-normal text-gray-800'>{singleJob?.location}</span></h1>
                 <h1 className='font-bold my-1'>Description: <span className='pl-4 font-normal text-gray-800'>{singleJob?.description}</span></h1>
-                <h1 className='font-bold my-1'>Experience: <span className='pl-4 font-normal text-gray-800'>{singleJob?.experienceLevel} yrs</span></h1>
+                <h1 className='font-bold my-1'>Experience: <span className='pl-4 font-normal text-gray-800'>{singleJob?.experience} yrs</span></h1>
                 <h1 className='font-bold my-1'>Salary: <span className='pl-4 font-normal text-gray-800'>{singleJob?.salary} LPA</span></h1>
                 <h1 className='font-bold my-1'>Total Applicants: <span className='pl-4 font-normal text-gray-800'>{singleJob?.applications?.length}</span></h1>
                 <h1 className='font-bold my-1'>Posted Date: <span className='pl-4 font-normal text-gray-800'>{singleJob?.createdAt?.split("T")[0]}</span></h1>

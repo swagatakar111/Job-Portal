@@ -1,9 +1,9 @@
-import React, { useState }  from 'react';
-import { Button } from './ui/button';
-import { Search } from 'lucide-react';
+import React, { useState } from 'react'
+import { Button } from './ui/button'
+import { Search } from 'lucide-react'
+import { useDispatch } from 'react-redux';
 import { setSearchedQuery } from '@/redux/jobSlice';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
 
 const HeroSection = () => {
     const [query, setQuery] = useState("");
@@ -14,7 +14,8 @@ const HeroSection = () => {
         dispatch(setSearchedQuery(query));
         navigate("/browse");
     }
-     return (
+
+    return (
         <div className='text-center'>
             <div className='flex flex-col gap-5 my-10'>
                 <span className=' mx-auto px-4 py-2 rounded-full bg-gray-100 text-[#F83002] font-medium'>Job Hunt Website</span>
@@ -35,4 +36,5 @@ const HeroSection = () => {
         </div>
     )
 }
+
 export default HeroSection
